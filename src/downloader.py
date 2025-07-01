@@ -2,11 +2,11 @@ import yt_dlp
 import os
 
 def download_audio(url, output_dir="output/audio"):
-    """下载音频文件并返回本地路径"""
-    # 确保输出目录存在
+    """Download audio file and return local path"""
+    # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)
     
-    # 配置下载选项
+    # Configure download options
     ydl_opts = {
         'format': 'bestaudio/best',
         'outtmpl': f"{output_dir}/%(title)s.%(ext)s",
@@ -23,5 +23,5 @@ def download_audio(url, output_dir="output/audio"):
             info = ydl.extract_info(url, download=True)
             return ydl.prepare_filename(info).replace('.webm', '.mp3').replace('.m4a', '.mp3')
     except Exception as e:
-        print(f"下载失败: {e}")
+        print(f"Download failed: {e}")
         return None

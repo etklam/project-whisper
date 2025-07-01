@@ -7,37 +7,37 @@ import os
 import subprocess
 
 def transcribe_audio(input_path: str, output_dir: str = None, model_name: str = None):
-    # 讀取設定檔
+    # Read configuration file
     config = configparser.ConfigParser()
     config.read('config.ini')
     
-    # 使用設定檔預設值
+    # Use configuration defaults
     if output_dir is None:
         output_dir = config.get('transcriber', 'output_dir', fallback='output/text')
     if model_name is None:
         model_name = config.get('transcriber', 'model_name', fallback='base')
     
-    # 建立輸出路徑
+    # Create output directory
     os.makedirs(output_dir, exist_ok=True)
     
-    # 檢查 ROCm 可用性
+    # Check ROCm availability
     if not torch.cuda.is_available():
         print("ROCm not available. Using CPU instead.")
     else:
         print(f"Using GPU: {torch.cuda.get_device_name(0)}")
 
     try:
-        # 嘗試載入模型
+        # Try to load model
         model = whisper.load_model(model_name)
     except RuntimeError as e:
         if "Model" in str(e) and "not found" in str(e):
             print(f"Model {model_name} not found. Downloading...")
-            # 自動下載模型
+            # Automatically download model
             subprocess.run(["whisper", "--model", model_name], check=True)
             model = whisper.load_model(model_name)
-            # 重新转录音频
+            # Retranscribe audio
             result = model.transcribe(normalized_path)
-            # 保存结果并返回路径
+            # Save results and return path
             txt_writer = get_writer("txt", output_dir)
             txt_writer(result, normalized_path)
             base = os.path.basename(normalized_path)
@@ -47,26 +47,23 @@ def transcribe_audio(input_path: str, output_dir: str = None, model_name: str = 
         else:
             raise e
 
-    # 處理路徑兼容性：將反斜線替換為正斜線
+    # Handle path compatibility: replace backslashes with forward slashes
     normalized_path = input_path.replace('\\', '/')
     if not os.path.exists(normalized_path):
         print(f"Error: Input file '{normalized_path}' does not exist.")
-        return
+        return None
         
-    # 確保輸出目錄存在
+    # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)
 
-    # 轉錄音訊
+    # Transcribe audio
     result = model.transcribe(normalized_path)
 
-    # 儲存結果
+    # Save results
     txt_writer = get_writer("txt", output_dir)
     txt_writer(result, normalized_path)
 
-    srt_writer = get_writer("srt", output_dir)
-    srt_writer(result, normalized_path)
-
-    # 返回文本文件路径
+    # Return text file path
     base = os.path.basename(normalized_path)
     base_without_ext = os.path.splitext(base)[0]
     txt_path = os.path.join(output_dir, base_without_ext + ".txt")
@@ -84,12 +81,12 @@ if __name__ == "__main__":
     output_dir = None
     model_name = None
     
-    # 解析參數：第二個參數可能是輸出路徑或模型名稱
+    # Parse arguments: second argument could be output path or model name
     for arg in sys.argv[2:]:
-        # 如果參數是目錄，設為輸出路徑
+        # If argument is a directory, set as output path
         if os.path.isdir(arg):
             output_dir = arg
-        # 否則，如果參數不是音訊檔案，則視為模型名稱
+        # Otherwise, if not an audio file, treat as model name
         elif not arg.endswith(('.mp3', '.wav', '.flac', '.m4a')):
             model_name = arg
     
