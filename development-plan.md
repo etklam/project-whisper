@@ -1,82 +1,82 @@
-# 音頻處理與AI重寫系統開發計劃
+# Audio Processing and AI Rewriting System Development Plan
 
-##
-- 使用繁體中文
+## 
+- Use Traditional Chinese
 
-## 系統架構
+## System Architecture
 ```mermaid
 graph TD
-    A[用戶輸入URL] --> B[音頻下載模組]
-    B --> C[語音轉文字模組]
-    C --> D[AI文本重寫模組]
-    D --> E[輸出最終文本]
+    A[User Inputs URL] --> B[Audio Download Module]
+    B --> C[Speech-to-Text Module]
+    C --> D[AI Text Rewriting Module]
+    D --> E[Output Final Text]
 ```
 
-## 檔案結構
+## File Structure
 ```
 project-whisper/
 ├── src/
-│   ├── downloader.py    # 音頻下載
-│   ├── transcriber.py   # 語音轉文字
-│   └── rewriter.py      # AI文本重寫
+│   ├── downloader.py    # Audio Download
+│   ├── transcriber.py   # Speech-to-Text
+│   └── rewriter.py      # AI Text Rewriting
 ├── input/
-│   └── urls.txt         # 輸入URL清單
+│   └── urls.txt         # Input URL List
 ├── output/
-│   ├── audio/           # 音頻存儲
-│   ├── text/            # 原始文字
-│   └── rewritten/       # 重寫後文字
-├── config.ini           # API金鑰配置
-├── main.py              # 主程序
-└── requirements.txt     # 依賴套件
+│   ├── audio/           # Audio Storage
+│   ├── text/            # Original Text
+│   └── rewritten/       # Rewritten Text
+├── config.ini           # API Key Configuration
+├── main.py              # Main Program
+└── requirements.txt     # Dependency Packages
 ```
 
-## 實施步驟
-1. 環境設置
+## Implementation Steps
+1. Environment Setup
    ```bash
    python -m venv venv
    source venv/bin/activate
    
-   # 安装ROCm支持的PyTorch (WSL2环境)
+   # Install ROCm-supported PyTorch (WSL2 environment)
    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/rocm5.7
    
-   # 安装项目依赖
+   # Install project dependencies
    pip install -r requirements.txt
    ```
 
-   ### 安裝編譯依賴項 (如果 whisper-cpp-python 安裝失敗)
+   ### Install Compilation Dependencies (if whisper-cpp-python installation fails)
    ```bash
    sudo apt-get update
    sudo apt-get install cmake ninja-build
    ```
    
-   ### WSL2环境设置
-   1. **安装ROCm驱动**:
+   ### WSL2 Environment Setup
+   1. **Install ROCm Driver**:
       ```bash
       sudo apt update
       sudo apt install rocm-hip-sdk
       ```
    
-   2. **验证ROCm安装**:
+   2. **Verify ROCm Installation**:
       ```bash
       rocminfo
       ```
    
-   3. **设置环境变量**:
+   3. **Set Environment Variables**:
       ```bash
       echo 'export HSA_OVERRIDE_GFX_VERSION=10.3.0' >> ~/.bashrc
       source ~/.bashrc
       ```
 
-2. 核心功能開發
-   - 音頻下載模組：支援YouTube等多平台
-   - 語音轉文字：使用Whisper模型
-   - 文本重寫：整合OpenRouter API
+2. Core Function Development
+   - Audio Download Module: Supports YouTube and other platforms
+   - Speech-to-Text: Uses Whisper model
+   - Text Rewriting: Integrates OpenRouter API
 
-3. 配置管理
-   - 創建`config.ini`儲存API金鑰
-   - 添加.gitignore避免洩露敏感信息
+3. Configuration Management
+   - Create `config.ini` to store API keys
+   - Add `.gitignore` to prevent leakage of sensitive information
 
-4. 主程序整合
+4. Main Program Integration
    ```python
    from src.downloader import download_audio
    from src.transcriber import transcribe_audio
@@ -86,10 +86,10 @@ project-whisper/
        audio_path = download_audio(url)
        text = transcribe_audio(audio_path)
        rewritten = rewrite_text(text)
-       # 保存輸出...
+       # Save output...
    ```
 
-## 依賴套件
+## Dependency Packages
 ```requirements.txt
 yt-dlp
 openai-whisper
@@ -97,8 +97,8 @@ requests
 configparser
 ```
 
-## 後續優化方向
-- 增加批次處理功能
-- 添加進度顯示
-- 支援多語言翻譯
-- 實現GUI界面
+## Future Optimization Directions
+- Add batch processing functionality
+- Include progress display
+- Support multilingual translation
+- Implement GUI interface
