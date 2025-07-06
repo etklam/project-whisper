@@ -4,23 +4,22 @@ import logging
 
 def download_audio(url, output_dir="input/"):
     """Download single audio file and return local path"""
-    # Ensure output directory exists
+    # Ensure output directory and log file exist
     os.makedirs(output_dir, exist_ok=True)
-    
-    # Check if URL has already been downloaded
     downloaded_file = os.path.join(output_dir, 'downloaded_urls.txt')
+
     downloaded_urls = set()
-    
+
     # Load downloaded URLs
     if os.path.exists(downloaded_file):
         with open(downloaded_file, 'r') as f:
             downloaded_urls = set(line.strip() for line in f)
-    
+
     # Skip if already downloaded
     if url in downloaded_urls:
         logging.info(f"Skipping already downloaded URL: {url}")
         return None
-    
+
     # Configure download options
     ydl_opts = {
         'format': 'bestaudio/best',
@@ -32,7 +31,7 @@ def download_audio(url, output_dir="input/"):
         }],
         'quiet': True,
     }
-    
+
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
