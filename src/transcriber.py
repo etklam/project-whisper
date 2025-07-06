@@ -5,8 +5,13 @@ import sys
 import configparser
 import os
 import subprocess
+import logging
 
 def transcribe_audio(input_path: str, output_dir: str = None, model_name: str = None):
+    # Configure logging
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger("transcriber")
+    
     # Read configuration file
     config = configparser.ConfigParser()
     config.read('config.ini')
@@ -17,46 +22,36 @@ def transcribe_audio(input_path: str, output_dir: str = None, model_name: str = 
     if model_name is None:
         model_name = config.get('transcriber', 'model_name', fallback='base')
     
-    # Create output directory
+    # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)
     
     # Check ROCm availability
     if not torch.cuda.is_available():
-        print("ROCm not available. Using CPU instead.")
+        logger.info("ROCm not available, using CPU")
     else:
-        print(f"Using GPU: {torch.cuda.get_device_name(0)}")
-
-    try:
-        # Try to load model
-        model = whisper.load_model(model_name)
-    except RuntimeError as e:
-        if "Model" in str(e) and "not found" in str(e):
-            print(f"Model {model_name} not found. Downloading...")
-            # Automatically download model
-            subprocess.run(["whisper", "--model", model_name], check=True)
-            model = whisper.load_model(model_name)
-            # Retranscribe audio
-            result = model.transcribe(normalized_path)
-            # Save results and return path
-            txt_writer = get_writer("txt", output_dir)
-            txt_writer(result, normalized_path)
-            base = os.path.basename(normalized_path)
-            base_without_ext = os.path.splitext(base)[0]
-            txt_path = os.path.join(output_dir, base_without_ext + ".txt")
-            return txt_path
-        else:
-            raise e
+        logger.info(f"Using GPU: {torch.cuda.get_device_name(0)}")
 
     # Handle path compatibility: replace backslashes with forward slashes
     normalized_path = input_path.replace('\\', '/')
     if not os.path.exists(normalized_path):
-        print(f"Error: Input file '{normalized_path}' does not exist.")
+        logger.error(f"输入文件不存在: {normalized_path}")
         return None
-        
-    # Ensure output directory exists
-    os.makedirs(output_dir, exist_ok=True)
+    
+    try:
+        # Attempt to load model
+        model = whisper.load_model(model_name)
+    except RuntimeError as e:
+        if "Model" in str(e) and "not found" in str(e):
+            logger.info(f"Model {model_name} not found, downloading...")
+            # Automatically download model
+            subprocess.run(["whisper", "--model", model_name], check=True)
+            model = whisper.load_model(model_name)
+        else:
+            logger.error(f"Model loading failed: {e}")
+            raise e
 
     # Transcribe audio
+    logger.info(f"Starting audio transcription: {normalized_path}")
     result = model.transcribe(normalized_path)
 
     # Save results
@@ -68,7 +63,7 @@ def transcribe_audio(input_path: str, output_dir: str = None, model_name: str = 
     base_without_ext = os.path.splitext(base)[0]
     txt_path = os.path.join(output_dir, base_without_ext + ".txt")
     
-    print(f"Transcription completed. Text file: {txt_path}")
+    logger.info(f"Transcription completed: {txt_path}")
     return txt_path
 
 if __name__ == "__main__":
@@ -83,7 +78,7 @@ if __name__ == "__main__":
     
     # Parse arguments: second argument could be output path or model name
     for arg in sys.argv[2:]:
-        # If argument is a directory, set as output path
+        # If it's a directory, set as output path
         if os.path.isdir(arg):
             output_dir = arg
         # Otherwise, if not an audio file, treat as model name
