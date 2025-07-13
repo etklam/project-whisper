@@ -1,24 +1,100 @@
-# 忽略虚拟环境
+# 忽略虛擬環境
 venv/
+env/
 
-# 忽略输出目录
-output/
-
-# 忽略配置文件（包含API密钥）
+# 忽略配置檔案（包含 API 金鑰）
 config.ini
+config/*.ini
 
-# 忽略IDE设置
+# 忽略 IDE 設定
 .vscode/
 .idea/
+*.swp
+*.swo
 
-# 忽略Python缓存
+# 忽略 Python 快取
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.pytest_cache/
 
-# 忽略系统文件
+# 忽略系統檔案
 .DS_Store
 Thumbs.db
+desktop.ini
 
-input/urls.txt
+# 忽略日誌檔案
+logs/
+*.log
+
+# 忽略暫存和快取目錄
+data/temp/
+data/cache/
+temp/
+cache/
+
+# 忽略敏感的輸入檔案
+data/input/urls/urls.txt
+data/input/config/
+
+# 忽略大型輸出檔案
+data/output/
+data/input/audio/
+*.mp3
+*.wav
+*.m4a
+
+# 忽略處理中的暫存檔案
+*.tmp
+*.temp
+processing_*
+
+# 忽略備份檔案
+backup/
+*.bak
+*.backup
+
+# 忽略作業系統產生的檔案
+.directory
+.fuse_hidden*
+
+# 忽略 Python 環境和套件
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 忽略 Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# 忽略環境變數檔案
+.env
+.env.*
+
+# 忽略模型檔案
+*.model
+*.pt
+*.pth
+models/
+whisper/
+
+# 忽略測試覆蓋率報告
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/

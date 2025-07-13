@@ -6,65 +6,75 @@ import configparser
 import os
 import subprocess
 import logging
+from datetime import datetime
+from pathlib import Path
+from .file_manager import FileManager
 
-def transcribe_audio(input_path: str, output_dir: str = None, model_name: str = None):
-    # Configure logging
-    logging.basicConfig(level=logging.INFO)
+def transcribe_audio(input_path: str, file_manager=None, model_name: str = None):
+    """轉錄音訊檔案為文字"""
+    # 配置日誌
     logger = logging.getLogger("transcriber")
     
-    # Read configuration file
+    if file_manager is None:
+        file_manager = FileManager()
+    
+    # 讀取配置檔案
     config = configparser.ConfigParser()
     config.read('config.ini')
     
-    # Use configuration defaults
-    if output_dir is None:
-        output_dir = config.get('transcriber', 'output_dir', fallback='output/text')
+    # 使用配置預設值
     if model_name is None:
         model_name = config.get('transcriber', 'model_name', fallback='base')
     
-    # Ensure output directory exists
-    os.makedirs(output_dir, exist_ok=True)
-    
-    # Check ROCm availability
+    # 檢查 ROCm 可用性
     if not torch.cuda.is_available():
-        logger.info("ROCm not available, using CPU")
+        logger.info("ROCm 不可用，使用 CPU")
     else:
-        logger.info(f"Using GPU: {torch.cuda.get_device_name(0)}")
+        logger.info(f"使用 GPU: {torch.cuda.get_device_name(0)}")
 
-    # Handle path compatibility: replace backslashes with forward slashes
-    normalized_path = input_path.replace('\\', '/')
-    if not os.path.exists(normalized_path):
-        logger.error(f"输入文件不存在: {normalized_path}")
+    # 處理路徑相容性
+    input_path = Path(input_path)
+    if not input_path.exists():
+        logger.error(f"輸入檔案不存在: {input_path}")
         return None
     
     try:
-        # Attempt to load model
+        # 嘗試載入模型
         model = whisper.load_model(model_name)
     except RuntimeError as e:
         if "Model" in str(e) and "not found" in str(e):
-            logger.info(f"Model {model_name} not found, downloading...")
-            # Automatically download model
+            logger.info(f"模型 {model_name} 未找到，正在下載...")
+            # 自動下載模型
             subprocess.run(["whisper", "--model", model_name], check=True)
             model = whisper.load_model(model_name)
         else:
-            logger.error(f"Model loading failed: {e}")
+            logger.error(f"模型載入失敗: {e}")
             raise e
 
-    # Transcribe audio
-    logger.info(f"Starting audio transcription: {normalized_path}")
-    result = model.transcribe(normalized_path)
+    # 轉錄音訊
+    logger.info(f"開始音訊轉錄: {input_path}")
+    result = model.transcribe(str(input_path))
 
-    # Save results
-    txt_writer = get_writer("txt", output_dir)
-    txt_writer(result, normalized_path)
-
-    # Return text file path
-    base = os.path.basename(normalized_path)
-    base_without_ext = os.path.splitext(base)[0]
-    txt_path = os.path.join(output_dir, base_without_ext + ".txt")
+    # 產生輸出檔案名稱
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    base_name = input_path.stem
+    txt_filename = f"{timestamp}_{base_name}_transcript.txt"
     
-    logger.info(f"Transcription completed: {txt_path}")
-    return txt_path
+    # 保存結果到新的檔案結構
+    output_path = file_manager.get_output_transcript_path(txt_filename, cleaned=False)
+    
+    # 使用 whisper 的 writer 保存
+    output_dir = output_path.parent
+    txt_writer = get_writer("txt", str(output_dir))
+    txt_writer(result, str(input_path))
+    
+    # 重新命名檔案以符合我們的命名規範
+    original_name = output_dir / f"{input_path.stem}.txt"
+    if original_name.exists():
+        original_name.rename(output_path)
+    
+    logger.info(f"轉錄完成: {output_path}")
+    return str(output_path)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
