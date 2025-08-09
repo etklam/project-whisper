@@ -61,11 +61,7 @@ def main():
         logger.info("步驟 2: 處理音訊檔案...")
         process_audio_files(file_manager, args.category, args.prompt_type)
         
-        # 步驟 3: 處理現有的文字檔案
-        logger.info("步驟 3: 處理現有的文字檔案...")
-        process_text_files(file_manager, args.category, args.prompt_type)
-        
-        # 步驟 4: 清理暫存檔案
+        # 步驟 3: 清理暫存檔案，這是新的第三步驟
         logger.info("步驟 4: 清理暫存檔案...")
         clean_temp_files(file_manager)
         
@@ -104,8 +100,21 @@ def process_audio_files(file_manager, category=None, prompt_type=None):
                 
         except Exception as e:
             logger.error(f"處理音訊檔案失敗 {audio_file}: {e}")
-
-def process_text_files(file_manager, category=None, prompt_type=None):
+# 刪除多餘的文字處理步驟 3
+# def process_text_files(file_manager, category=None, prompt_type=None):
+#     """處理現有的文字檔案"""
+#     logger = logging.getLogger("process_text")
+#
+#     # 處理原始轉錄檔案
+#     text_files = file_manager.list_files('data_output_transcripts_raw', '*.txt')
+#
+#     for text_file in text_files:
+#         try:
+#             logger.info(f"重寫文字: {text_file.name}")
+#             rewrite_text(str(text_file), file_manager, prompt_type, category)
+#
+#         except Exception as e:
+#             logger.error(f"處理文字檔案失敗 {text_file}: {e}")
     """處理現有的文字檔案"""
     logger = logging.getLogger("process_text")
     

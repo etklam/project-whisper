@@ -58,6 +58,8 @@ def transcribe_audio(input_path: str, file_manager=None, model_name: str = None)
     # 產生輸出檔案名稱
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     base_name = input_path.stem
+    # 限制文件名長度，只保留前面15個字
+    base_name = base_name[:15] if len(base_name) > 15 else base_name
     txt_filename = f"{timestamp}_{base_name}_transcript.txt"
     
     # 保存結果到新的檔案結構
